@@ -11,7 +11,7 @@ node_env:
 # hosting environments this setting would typically be locked at the machine scope.
 
 # nodeProcessCommandLine: "C:\Program Files\nodejs\node.exe"
-
+nodeProcessCommandLine: "%SystemDrive%\Program Files (x86)\nodejs\6.9.4\node.exe"
 # interceptor - fully qualified file name of a node.js application that will run instead of an actual application
 # the request targets; the fully qualified file name of the actual application file is provided as the first parameter
 # to the interceptor application; default interceptor supports iisnode logging
