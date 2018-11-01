@@ -14,7 +14,7 @@ const line_config = {
 
 // ================================
 // Webサーバ設定
-server.listen(process.env.PORT || 3000);
+server.listen(process.env.PORT || 8080);
 
 // ================================
 // ルーティング設定
