@@ -15,44 +15,6 @@ const line_config = {
 
 const bot = new line.Client(line_config);
 
-// リッチメニュー設定
-const richObject = {
-  size: {
-    width: 2500,
-    height: 1686
-  },
-  selected: true,
-  name: 'Sample',
-  chatBarText: 'ひらけごま',
-  areas: [
-    {
-      bounds: { x: 0, y: 0, width: 1250, height: 1686},
-      action: {
-        type: 'postback',
-        data: 'action=1',
-        label: '1番',
-        displayText: '1番を選びます'
-      }
-    },
-    {
-      bounds: { x: 1250, y: 0, width: 1250, height: 1686},
-      action: {
-        type: 'postback',
-        data: 'action=1',
-        label: '1番',
-        displayText: '1番を選びます'
-      }
-    }
-  ]
-};
-let richMenuId;
-bot.createRichMenu(richObject)
-.then((id) => {
-  richMenuId = id;
-  console.log('rich menu id: ' + id);
-});
-
-
 // ================================
 // Webサーバ設定
 server.listen(process.env.PORT || 8080);
@@ -76,14 +38,42 @@ server.post('/webhook', line.middleware(line_config), (req, res, next) => {
       // メッセージがテキストの時のみ
       if(event.type == 'message' && event.message.type == 'text') {
         if(event.message.text == 'メニュー') {
-          events_processed.push(bot.getRichMenu(richMenuId));
+          events_processed.push(bot.replyMessage(event.replyToken, {
+            type: 'text',
+            text: '好きなアクションを選んでね！',
+            quickReply: {
+              items: [
+                {
+                  type: 'action',
+                  action: {
+                    type: 'location',
+                    label: '位置情報'
+                  }
+                },
+                {
+                  type: 'action',
+                  action: {
+                    type: 'camera',
+                    label: 'カメラ起動'
+                  }
+                },
+                {
+                  type: 'action',
+                  action: {
+                    type: 'cameraRoll',
+                    label: 'ギャラリー'
+                  }
+                }
+              ]
+            }
+          }));
+        } else {
+          events_processed.push(bot.replyMessage(event.replyToken, {
+            type: 'text',
+            text: event.message.text
+          }));
         }
-        events_processed.push(bot.replyMessage(event.replyToken, {
-          type: 'text',
-          text: event.message.text
-        }));
-    }
-
+      }
     }
   });
 
