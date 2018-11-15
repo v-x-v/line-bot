@@ -49,14 +49,14 @@ app.post('/webhook', line.middleware(line_config), (req, res, next) => {
         if (event.message.text == 'メニュー') {
           events_processed.push(bot.replyMessage(event.replyToken, template.QUICK_MESSAGE));
         } else {
-          qnaMaker.getAnswer(event.message.text, function (message) {
+          events_processed.push(
+            qnaMaker.getAnswer(event.message.text, function (message) {
             console.log('### callback function called ###');
-            events_processed.push(
-              bot.replyMessage(event.replyToken, {
+            return bot.replyMessage(event.replyToken, {
               type: 'text',
               text: message
-            }))
-          });
+            });
+          }));
         }
       }
     }
