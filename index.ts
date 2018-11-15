@@ -41,20 +41,23 @@ app.post('/webhook', line.middleware(line_config), (req, res, next) => {
   req.body.events.forEach((event) => {
 
     // 管理画面のテスト接続時はトークンが固定。処理しない
-    if(testReplyTokenList.indexOf(event.replyToken) != 0) {
+    if (testReplyTokenList.indexOf(event.replyToken) != 0) {
 
       // メッセージがテキストの時のみ
-      if(event.type == 'message' && event.message.type == 'text') {
+      if (event.type == 'message' && event.message.type == 'text') {
 
-        if(event.message.text == 'メニュー') {
+        if (event.message.text == 'メニュー') {
           events_processed.push(bot.replyMessage(event.replyToken, template.QUICK_MESSAGE));
         } else {
-          qnaMaker.getAnswer(event.message.text, function(message) {
-            events_processed.push(bot.replyMessage(event.replyToken, {
-              type: 'text',
-              text: message
-            }));
-          });
+          events_processed.push(
+            qnaMaker.getAnswer(event.message.text, function (message) {
+              console.log('### callback function called ###');
+              bot.replyMessage(event.replyToken, {
+                type: 'text',
+                text: message
+              })
+            })
+          );
         }
       }
     }
@@ -62,14 +65,14 @@ app.post('/webhook', line.middleware(line_config), (req, res, next) => {
 
   // すべてのイベント処理が終了されたら、処理数を出力
   Promise.all(events_processed)
-  .then(
-    (response) => {
-      console.log(`${response.length} event(s) processed.`)
-    }
-  )
-  .catch((err) => {
-    // 途中でエラーが発生した場合は内容を表示
-    console.log(err);
-  });
+    .then(
+      (response) => {
+        console.log(`${response.length} event(s) processed.`)
+      }
+    )
+    .catch((err) => {
+      // 途中でエラーが発生した場合は内容を表示
+      console.log(err);
+    });
 });
 

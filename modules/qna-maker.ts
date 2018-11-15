@@ -28,7 +28,7 @@ export class QnAMaker {
    * @param {function} コールバック関数
    * @returns {string} 質問に対応した、登録済みの回答
    */
-  async getAnswer(question: string, callback): Promise<void> {
+  async getAnswer(question: string, callback): Promise<any> {
     // 質問内容をJSONに変換
     let content = this.convertQuestion(question);
     // Request設定
@@ -43,6 +43,7 @@ export class QnAMaker {
     }
     request.post(requestParameters, function(err, res, body) {
       if(!err && res.statusCode === 200) {
+        console.log('### QnA Completed ###\n' + body);
         callback(body);
       }
     });
