@@ -34,7 +34,7 @@ export class QnAMaker {
     let options = {
       method: 'POST',
       uri: this.endpointUrl,
-      header: {
+      headers: {
         'Content-Type': 'application/json',
         'Authorization': 'EndpointKey ' + this.accessKey,
       },
