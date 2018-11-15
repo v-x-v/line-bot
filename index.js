@@ -3,8 +3,9 @@
 // ================================
 // ライブラリインポート
 require('dotenv').config(); // .envファイルから環境変数を読み込む
-const server = require('express')();
+const app = require('express')();
 const line   = require('@line/bot-sdk');  // LINE Messaging-API用のSDK
+const message = require('./modules/message');
 
 // ================================
 // LINE接続用パラメータ
@@ -17,13 +18,13 @@ const bot = new line.Client(line_config);
 
 // ================================
 // Webサーバ設定
-server.listen(process.env.PORT || 8080);
+app.listen(process.env.PORT || 8080);
 
 // テスト接続時に使われるReplyToken
 const testReplyTokenList = ['00000000000000000000000000000000', 'ffffffffffffffffffffffffffffffff']
 // ================================
 // ルーティング設定
-server.post('/webhook', line.middleware(line_config), (req, res, next) => {
+app.post('/webhook', line.middleware(line_config), (req, res, next) => {
   // まずLINE側にステータスコード200 OKを返す
   res.sendStatus(200);
   console.log(req.body);
@@ -33,40 +34,15 @@ server.post('/webhook', line.middleware(line_config), (req, res, next) => {
 
   // イベントオブジェクトを順次処理
   req.body.events.forEach((event) => {
+
     // 管理画面のテスト接続時はトークンが固定。処理しない
-    if(testReplyTokenList.indexOf(event.replyToken) >= 0) {
+    if(testReplyTokenList.indexOf(event.replyToken) != 0) {
+
       // メッセージがテキストの時のみ
       if(event.type == 'message' && event.message.type == 'text') {
+
         if(event.message.text == 'メニュー') {
-          events_processed.push(bot.replyMessage(event.replyToken, {
-            type: 'text',
-            text: '好きなアクションを選んでね！',
-            quickReply: {
-              items: [
-                {
-                  type: 'action',
-                  action: {
-                    type: 'location',
-                    label: '位置情報'
-                  }
-                },
-                {
-                  type: 'action',
-                  action: {
-                    type: 'camera',
-                    label: 'カメラ起動'
-                  }
-                },
-                {
-                  type: 'action',
-                  action: {
-                    type: 'cameraRoll',
-                    label: 'ギャラリー'
-                  }
-                }
-              ]
-            }
-          }));
+          events_processed.push(bot.replyMessage(event.replyToken, message.QUICK_MESSAGE));
         } else {
           events_processed.push(bot.replyMessage(event.replyToken, {
             type: 'text',
