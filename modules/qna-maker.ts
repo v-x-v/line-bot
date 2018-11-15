@@ -42,12 +42,12 @@ export class QnAMaker {
       json: true
     }
     rp(options)
-    .then(function(body) {
-        console.log('### QnA Completed ###\n' + body);
-        callback(body);
-      })
-    .catch(function(err) {
-      console.log('err: ' + JSON.stringify(err));
+    .then((body) => callback(body))
+    .catch((err) => {
+      if(err.response) {
+        console.log('error-response', err.response);
+      }
+      console.log(err);
     });
   }
 };

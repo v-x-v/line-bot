@@ -52,10 +52,10 @@ app.post('/webhook', line.middleware(line_config), (req, res, next) => {
           events_processed.push(
             qnaMaker.getAnswer(event.message.text, function (message) {
               console.log('### callback function called ###');
-              return bot.replyMessage(event.replyToken, {
+              events_processed.push(bot.replyMessage(event.replyToken, {
                 type: 'text',
                 text: message
-              })
+              }))
             })
           );
         }
