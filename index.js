@@ -6,7 +6,7 @@ require('dotenv').config(); // .envファイルから環境変数を読み込む
 const app      = require('express')();
 const line     = require('@line/bot-sdk');  // LINE Messaging-API用のSDK
 const message  = require('./modules/message');
-const QnAMaker = require('./modules/qnamaker')();
+const QnAMaker = require('./modules/qnamaker');
 let qna = new QnAMaker();
 
 // ================================
