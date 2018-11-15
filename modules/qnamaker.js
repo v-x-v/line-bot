@@ -1,11 +1,17 @@
-// QnA Maker接続用クラス
-
 let request = require('request');
-exports = class QnaMaker {
+/**
+ * @description QnA Maker 接続用クラス
+ */
+exports = class QnAMaker {
   constructor() {
     this.endpointUrl = process.env.QNA_ENDPOINT_URL;
     this.accessKey = process.env.QNA_ACCESS_KEY;
   }
+  /**
+   * 質問文をQnA Makerに投げるためのJSON形式に変換
+   * @param {string} question 質問文
+   * @returns {string} JSON形式の文字列
+   */
   convertQuestion(question) {
     let content = {
       'question': question,
