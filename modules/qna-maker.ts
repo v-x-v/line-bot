@@ -1,4 +1,4 @@
-let request = require('request');
+import * as rp from 'request-promise';
 
 export class QnAMaker {
   private endpointUrl: string;
@@ -11,15 +11,14 @@ export class QnAMaker {
   /**
    * 質問文をQnA Makerに投げるためのJSON形式に変換
    * @param {string} question 質問文
-   * @returns {string} JSON形式の文字列
+   * @returns {any} JSON形式の文字列
    */
-  private convertQuestion(question: string): string {
+  private convertQuestion(question: string): any {
     let content = {
-      'question': question,
-      'top': 1
+      'question': question
     }
 
-    return JSON.stringify(content);
+    return content;
   }
 
   /**
@@ -32,20 +31,23 @@ export class QnAMaker {
     // 質問内容をJSONに変換
     let content = this.convertQuestion(question);
     // Request設定
-    let requestParameters = {
-      url: this.endpointUrl,
+    let options = {
+      method: 'POST',
+      uri: this.endpointUrl,
       header: {
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(content),
         'Authorization': 'EndpointKey ' + this.accessKey,
       },
-      body: content
+      body: content,
+      json: true
     }
-    request.post(requestParameters, function(err, res, body) {
-      if(!err && res.statusCode === 200) {
+    rp(options)
+    .then(function(body) {
         console.log('### QnA Completed ###\n' + body);
         callback(body);
-      }
+      })
+    .catch(function(err) {
+      console.log('err: ' + JSON.stringify(err));
     });
   }
 };
