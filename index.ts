@@ -4,7 +4,7 @@
 // ライブラリインポート
 import * as dotenv from "dotenv";
 dotenv.config();
-import * as express from 'Express';
+import * as express from "express";
 let app = express();
 import * as line from '@line/bot-sdk';
 

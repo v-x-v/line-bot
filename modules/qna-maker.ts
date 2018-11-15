@@ -39,7 +39,7 @@ export class QnAMaker {
         'Content-Length': Buffer.byteLength(content),
         'Authorization': 'EndpointKey ' + this.accessKey,
       },
-      form: content
+      body: content
     }
     request.post(requestParameters, function(err, res, body) {
       if(!err && res.statusCode === 200) {
