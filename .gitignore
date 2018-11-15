@@ -76,6 +76,7 @@ typings/
 node_modules/
 *.js.map
 package-lock.json
+*.js
 
 # Visual Studio Code Files
 .vscode/*
