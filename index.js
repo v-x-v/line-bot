@@ -3,9 +3,10 @@
 // ================================
 // ライブラリインポート
 require('dotenv').config(); // .envファイルから環境変数を読み込む
-const app = require('express')();
-const line   = require('@line/bot-sdk');  // LINE Messaging-API用のSDK
+const app     = require('express')();
+const line    = require('@line/bot-sdk');  // LINE Messaging-API用のSDK
 const message = require('./modules/message');
+const qna     = require('./modules/qnamaker');
 
 // ================================
 // LINE接続用パラメータ
@@ -44,10 +45,12 @@ app.post('/webhook', line.middleware(line_config), (req, res, next) => {
         if(event.message.text == 'メニュー') {
           events_processed.push(bot.replyMessage(event.replyToken, message.QUICK_MESSAGE));
         } else {
-          events_processed.push(bot.replyMessage(event.replyToken, {
-            type: 'text',
-            text: event.message.text
-          }));
+          qna.getAnswer(event.message.text, function(message) {
+            events_processed.push(bot.replyMessage(event.replyToken, {
+              type: 'text',
+              text: message
+            }));
+          });
         }
       }
     }
