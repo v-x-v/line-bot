@@ -1,13 +1,19 @@
 import * as request from 'request-promise';
 import * as message from './message';
+import { Luis } from './luis';
 
+/**
+ * QnA Maker操作クラス
+ */
 export class QnAMaker {
   private endpointUrl: string;
   private accessKey: string;
+  private luis: Luis;
 
   constructor() {
     this.endpointUrl = process.env.QNA_ENDPOINT_URL;
     this.accessKey = process.env.QNA_ACCESS_KEY;
+    this.luis = new Luis();
   }
   /**
    * 質問文をQnA Makerに投げるためのJSON形式に変換
@@ -33,14 +39,14 @@ export class QnAMaker {
     let content = this.convertQuestion(question);
     // Request設定
     let options = {
-      method: 'POST',
-      uri: this.endpointUrl,
-      headers: {
+      'method': 'POST',
+      'uri': this.endpointUrl,
+      'headers': {
         'Content-Type': 'application/json',
         'Authorization': 'EndpointKey ' + this.accessKey,
       },
-      body: content,
-      json: true
+      'body': content,
+      'json': true
     }
     // QnAMakerから回答をJSON形式で得る
     // 参考： https://westus.dev.cognitive.microsoft.com/docs/services/58994a073d9e04097c7ba6fe/operations/58994a073d9e041ad42d9ba9
@@ -52,14 +58,17 @@ export class QnAMaker {
         callback(top_answer.answer);
         return;
       }
-      // 信頼がない回答は無視する
-      // TODO: キーワードから、推測される回答を表示
-      callback(message.STR_QNA_NOTFOUND);
+      // 信頼がない回答はキーワードから、推測される回答を表示
+      let keyword = this.luis.detect(question);
+      callback('もしかして: ' + keyword);
     }).catch((err) => {
       switch(err.statusCode) {
         case 404:
-          // ナレッジベースに一致する回答がない場合
-          callback(message.STR_QNA_NOTFOUND);
+          // ナレッジベースに一致する回答がない場合、
+          // キーワードから、推測される回答を表示
+          let keyword = this.luis.detect(question);
+          callback('もしかして: ' + keyword);
+//              callback(message.STR_QNA_NOTFOUND);
           return;
         case 401:
           // 認証エラー
