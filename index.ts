@@ -54,7 +54,7 @@ app.post('/webhook', line.middleware(line_config), (req, res, next) => {
             console.log('### callback function called ###');
             return bot.replyMessage(event.replyToken, {
               type: 'text',
-              text: JSON.stringify(message)
+              text: message
             });
           }));
         }
