@@ -28,9 +28,9 @@ export class Luis{
   /**
    * LUISを通じて、入力文章を解析する
    * @param {string} question 入力文章
-   * @returns {any} JSON形式の要素一覧
+   * @returns {Primise<any>} JSON形式の要素一覧
    */
-  detect(question: string):any {
+  async detect(question: string):Promise<any> {
     let url = this.endpointUrl;
     let content = this.convertQuestion(question);
     let options = {
@@ -40,9 +40,10 @@ export class Luis{
         'Content-Type': 'application/json',
         'Ocp-Apim-Subscription-Key': this.accessKey
       },
-      'body': content
+      'body': content,
+      'json': true
     }
-    request(options)
+    return await request(options)
     .then((response) => {
       console.log(JSON.stringify(response));
       return response.topScoringIntent.intent;

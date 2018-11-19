@@ -32,7 +32,7 @@ export class QnAMaker {
    * 質問文をQnA Makerに投げ、回答を取得する
    * @param {string}  question 質問文
    * @param {function} コールバック関数
-   * @returns {string} 質問に対応した、登録済みの回答
+   * @returns {Promise<any>} 質問に対応した、登録済みの回答
    */
   async getAnswer(question: string, callback: (body: any) => void): Promise<any> {
     // 質問内容をJSONに変換
@@ -50,7 +50,7 @@ export class QnAMaker {
     }
     // QnAMakerから回答をJSON形式で得る
     // 参考： https://westus.dev.cognitive.microsoft.com/docs/services/58994a073d9e04097c7ba6fe/operations/58994a073d9e041ad42d9ba9
-    request(options)
+    return request(options)
     .then((response) => {
       let top_answer = response.answers[0];
       console.log('get answer: ', JSON.stringify(top_answer));
