@@ -1,4 +1,5 @@
-import * as rp from 'request-promise';
+import * as request from 'request-promise';
+import * as message from './message';
 
 export class QnAMaker {
   private endpointUrl: string;
@@ -41,13 +42,44 @@ export class QnAMaker {
       body: content,
       json: true
     }
-    rp(options)
-    .then((body) => callback(body))
-    .catch((err) => {
-      if(err.response) {
-        console.log('error-response', err.response);
+    // QnAMakerから回答をJSON形式で得る
+    // 参考： https://westus.dev.cognitive.microsoft.com/docs/services/58994a073d9e04097c7ba6fe/operations/58994a073d9e041ad42d9ba9
+    request(options)
+    .then((response) => {
+      let top_answer = response.answers[0];
+      console.log('get answer: ', JSON.stringify(top_answer));
+      if(top_answer.score > 90) {
+        callback(top_answer.answer);
+        return;
       }
-      console.log(err);
+      // 信頼がない回答は無視する
+      // TODO: キーワードから、推測される回答を表示
+      callback(message.STR_QNA_NOTFOUND);
+    }).catch((err) => {
+      switch(err.statusCode) {
+        case 404:
+          // ナレッジベースに一致する回答がない場合
+          callback(message.STR_QNA_NOTFOUND);
+          return;
+        case 401:
+          // 認証エラー
+          console.log('QnA apiで認証エラーが発生しました。', err.response.message);
+          callback(message.STR_QNA_UNAUTHORIZED);
+          return;
+        case 429:
+        case 403:
+          // API上限エラー
+          console.log('QnA apiがリクエスト上限に達しています。', err.response.message);
+          callback(message.STR_QNA_LIMIT_QUOTA);
+          return;
+        case 408:
+          // タイムアウト
+          console.log('QnA apiでタイムアウトが発生しました。');
+          callback(message.STR_QNA_TIMEOUT);
+          return;
+        default:
+          return;
+      }
     });
   }
 };
