@@ -59,15 +59,19 @@ export class QnAMaker {
         return;
       }
       // 信頼がない回答はキーワードから、推測される回答を表示
-      let keyword = this.luis.detect(question);
-      callback('もしかして: ' + keyword);
+      this.luis.detect(question)
+      .then((keyword) => {
+        callback('もしかして: ' + keyword);
+      });
     }).catch((err) => {
       switch(err.statusCode) {
         case 404:
           // ナレッジベースに一致する回答がない場合、
           // キーワードから、推測される回答を表示
-          let keyword = this.luis.detect(question);
-          callback('もしかして: ' + keyword);
+          this.luis.detect(question)
+          .then((keyword) => {
+            callback('もしかして: ' + keyword);
+          });
 //              callback(message.STR_QNA_NOTFOUND);
           return;
         case 401:
