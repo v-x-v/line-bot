@@ -18,11 +18,7 @@ export class Luis{
    * @returns {any} JSON形式の文字列
    */
   private convertQuestion(question: string): any {
-    let content = {
-      question
-    }
-
-    return content;
+    return question;
   }
 
   /**
