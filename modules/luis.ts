@@ -12,13 +12,27 @@ export class Luis{
     this.endpointUrl = process.env.LUIS_ENDPOINT_URL;
     this.accessKey = process.env.LUIS_ACCESS_KEY;
   }
+    /**
+   * 質問文をLUISに投げるためのJSON形式に変換
+   * @param {string} question 質問文
+   * @returns {any} JSON形式の文字列
+   */
+  private convertQuestion(question: string): any {
+    let content = {
+      question
+    }
+
+    return content;
+  }
+
   /**
    * LUISを通じて、入力文章を解析する
-   * @param {string} req 入力文章
+   * @param {string} question 入力文章
    * @returns {any} JSON形式の要素一覧
    */
-  detect(req: string):any {
+  detect(question: string):any {
     let url = this.endpointUrl;
+    let content = this.convertQuestion(question);
     let options = {
       'method': 'POST',
       'uri': url,
@@ -26,7 +40,7 @@ export class Luis{
         'Content-Type': 'application/json',
         'Ocp-Apim-Subscription-Key': this.accessKey
       },
-      'body': req
+      'body': content
     }
     request(options)
     .then((response) => {
