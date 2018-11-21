@@ -8,7 +8,8 @@ import * as express from "express";
 let app = express();
 import * as line from '@line/bot-sdk';
 
-import * as template from './modules/message';
+import * as MyMessage from './modules/message';
+import * as Keyword from './modules/keyword';
 import { QnAMaker } from './modules/qna-maker';
 let qnaMaker = new QnAMaker();
 
@@ -45,18 +46,23 @@ app.post('/webhook', line.middleware(line_config), (req, res, next) => {
 
       // メッセージがテキストの時のみ
       if (event.type == 'message' && event.message.type == 'text') {
-
-        if (event.message.text == 'メニュー') {
-          events_processed.push(bot.replyMessage(event.replyToken, template.QUICK_MESSAGE));
-        } else {
-          events_processed.push(
-            qnaMaker.getAnswer(event.message.text, function (message) {
-            console.log('### callback function called ###');
-            return bot.replyMessage(event.replyToken, {
-              type: 'text',
-              text: message
-            });
-          }));
+        switch (event.message.text) {
+          case 'メニュー':
+            events_processed.push(bot.replyMessage(event.replyToken, MyMessage.Template.QUICK_MESSAGE));
+            break;
+          case Keyword.SELECT_EVENT_DATE:
+            events_processed.push(bot.replyMessage(event.replyToken, MyMessage.Template.DATEPICKER_MESSAGE));
+            break;
+          default:
+            events_processed.push(
+              qnaMaker.getAnswer(event.message.text, function (message) {
+                console.log('### callback function called ###');
+                return bot.replyMessage(event.replyToken, {
+                  type: 'text',
+                  text: message
+                });
+              })
+            );
         }
       }
     }

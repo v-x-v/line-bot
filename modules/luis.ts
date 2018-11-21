@@ -49,7 +49,7 @@ export class Luis{
         default:
           console.log('error status code: ', err.statusCode);
       }
-      return message.STR_LUIS_ERROR;
+      return message.LUIS.NOTFOUND;
     });
   }
 };

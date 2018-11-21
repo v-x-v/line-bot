@@ -77,18 +77,18 @@ export class QnAMaker {
         case 401:
           // 認証エラー
           console.log('QnA apiで認証エラーが発生しました。', err.response.message);
-          callback(message.STR_QNA_UNAUTHORIZED);
+          callback(message.QnA.UNAUTHORIZED);
           return;
         case 429:
         case 403:
           // API上限エラー
           console.log('QnA apiがリクエスト上限に達しています。', err.response.message);
-          callback(message.STR_QNA_LIMIT_QUOTA);
+          callback(message.QnA.LIMIT_QUOTA);
           return;
         case 408:
           // タイムアウト
           console.log('QnA apiでタイムアウトが発生しました。');
-          callback(message.STR_QNA_TIMEOUT);
+          callback(message.QnA.TIMEOUT);
           return;
         default:
           return;
