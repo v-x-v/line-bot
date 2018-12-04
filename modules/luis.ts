@@ -53,7 +53,7 @@ export class Luis {
     .catch((err) => {
       switch (err.statusCode) {
         default:
-          console.log("error status code: ", err.statusCode);
+          console.log("luis-detect occured error: ", err.statusCode, err);
       }
       return message.LUIS.NOTFOUND;
     });

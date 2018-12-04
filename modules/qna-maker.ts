@@ -58,17 +58,19 @@ export class QnAMaker {
         let top_answer: any = response.answers[0];
         console.log("get answer: ", JSON.stringify(top_answer));
         if (top_answer.score >= 90) {
-          callback(top_answer.answer);
-          return;
+          return callback(top_answer.answer);
         } else {
           // 回答がない場合は、LUISをコール、インテントを取得して
           // 再度QnAに問い合わせ
           this.luis.detect(question)
           .then((intents) => {
+            // インテントも取得できない場合は、 そのままコールバック
+            if(intents.length === 0) {
+              return callback(message.QnA.NO_ANSWER);
+            }
             this.getAnswerWithLuis(intents)
             .then((answer: string) => {
-              callback(answer);
-              return;
+              return callback(answer);
             });
 
           });
@@ -76,24 +78,21 @@ export class QnAMaker {
       }).catch((err) => {
         switch (err.statusCode) {
           case 404:
-            callback(message.QnA.NO_ANSWER);
-            return;
+           return callback(message.QnA.NO_ANSWER);
+
           case 401:
             // 認証エラー
             console.log("QnA apiで認証エラーが発生しました。", err.response.message);
-            callback(message.QnA.UNAUTHORIZED);
-            return;
+            return callback(message.QnA.UNAUTHORIZED);
           case 429:
           case 403:
             // API上限エラー
             console.log("QnA apiがリクエスト上限に達しています。", err.response.message);
-            callback(message.QnA.LIMIT_QUOTA);
-            return;
+            return callback(message.QnA.LIMIT_QUOTA);
           case 408:
             // タイムアウト
             console.log("QnA apiでタイムアウトが発生しました。");
-            callback(message.QnA.TIMEOUT);
-            return;
+            return callback(message.QnA.TIMEOUT);
           default:
             // その他のエラー
             console.log("予期せぬエラーが発生しました", err);
