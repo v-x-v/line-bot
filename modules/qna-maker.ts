@@ -63,7 +63,7 @@ export class QnAMaker {
         } else {
           // 回答がない場合は、LUISをコール、インテントを取得して
           // 再度QnAに問い合わせ
-          this.luis.detect(content)
+          this.luis.detect(question)
           .then((intents) => {
             this.getAnswerWithLuis(intents)
             .then((answer: string) => {
