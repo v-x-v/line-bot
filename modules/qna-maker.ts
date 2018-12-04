@@ -71,6 +71,9 @@ export class QnAMaker {
             this.getAnswerWithLuis(intents)
             .then((answer: string) => {
               return callback(answer);
+            })
+            .catch((err) => {
+              console.log("getAnsweWithLuis occured error. ", err);
             });
 
           });
@@ -107,7 +110,7 @@ export class QnAMaker {
   private async getAnswerWithLuis(intents: Array<any>): Promise<any> {
     console.log("2nd QnA called.");
     intents.map((v, i) => {
-      console.log("intent" + i + ": " + v);
+      console.log("intent" + i + ": " + JSON.stringify(v));
     })
   }
 
