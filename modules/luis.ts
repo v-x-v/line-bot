@@ -35,7 +35,10 @@ export class Luis {
       "uri": url,
       "headers": {
         "Content-Type": "application/json",
-        "Ocp-Apim-Subscription-Key": this.access_key
+        "Ocp-Apim-Subscription-Key": this.access_key,
+        "verbose": true,
+        "spellCheck": true,
+        "bing-spell-check-subscription-key": "3fdbf40d60ba44759b8b532c877ffe5c"
       },
       "body": content,
       "json": true
