@@ -95,6 +95,8 @@ export class QnAMaker {
             callback(message.QnA.TIMEOUT);
             return;
           default:
+            // その他のエラー
+            console.log("予期せぬエラーが発生しました", err);
             return;
         }
       });
@@ -104,6 +106,7 @@ export class QnAMaker {
    * @param intents LUISから得られたインテントの配列
    */
   private async getAnswerWithLuis(intents: Array<any>): Promise<any> {
+    console.log("2nd QnA called.");
     intents.map((v, i) => {
       console.log("intent" + i + ": " + v);
     })

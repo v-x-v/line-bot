@@ -40,9 +40,10 @@ export class Luis {
       "body": content,
       "json": true
     };
+    console.log("luis-detect called. content: " + content);
     return request(options)
     .then((response) => {
-      console.log(JSON.stringify(response));
+      console.log("luis-api returned.", JSON.stringify(response));
       let intent_list = response.intents.filter(function(element: any) {
         // 関連するインテントがあり、スコアが閾値を超えた結果のみを取得する
         return (element.intent !== message.LUIS.INTENT_NONE && element.score < new Number(process.env.SCORE_THRESHOLD));
