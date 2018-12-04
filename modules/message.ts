@@ -4,50 +4,54 @@ import * as Moment from "moment";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-//======= QnA Makerのエラーメッセージ =======//
+// ======= QnA Makerのエラーメッセージ =======//
 export namespace QnA {
   // 404エラー時応答メッセージ
-  export const NOTFOUND: string = "まだ回答がないよ。学習するまで待ってね！";
+  export const NO_ANSWER: string = "まだ回答がないよ。学習するまで待ってね！";
   // 401エラー時応答メッセージ
   export const UNAUTHORIZED: string = "エラーが発生したよ。管理者に問い合わせてね！";
   // 403エラー時応答メッセージ
   export const LIMIT_QUOTA: string = "アクセスが集中しているよ。時間をあけてもう一度尋ねてね！";
   // 408エラー時応答メッセージ
   export const TIMEOUT: string = "アクセスが集中しているよ。時間をあけてもう一度尋ねてね！";
-};
+}
 
-//======= LUISのエラーメッセージ =======//
+// ======= LUISのエラーメッセージ =======//
 export namespace LUIS {
   // エラー時応答メッセージ
   export const NOTFOUND: string = "notfound";
-};
+  // 該当する結果がない場合のインテント名
+  export const INTENT_NONE: string = "NONE";
+  // 該当する結果がない場合の応答メッセージ
+  export const NO_ANSWER: string = "まだ回答がないよ。学習するまで待ってね！";
+}
 
 export namespace Template {
   // クイックメッセージ
   export var QUICK_MESSAGE: any = {
-    type: 'text',
-    text: '好きなアクションを選んでね！',
+    type: "text",
+    text: "好きなアクションを選んでね！",
     quickReply: {
       items: [
         {
-          type: 'action',
+          type: "action",
           action: {
-            type: 'location',
-            label: '位置情報'
+            type: "location",
+            label: "位置情報"
           }
         },
         {
-          type: 'action',
+          type: "action",
           action: {
-            type: 'camera',
-            label: 'カメラ起動'
+            type: "camera",
+            label: "カメラ起動"
           }
         },
         {
-          type: 'action',
+          type: "action",
           action: {
-            type: 'cameraRoll',
-            label: 'ギャラリー'
+            type: "cameraRoll",
+            label: "ギャラリー"
           }
         }
       ]

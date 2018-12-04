@@ -1,18 +1,19 @@
-import * as request from 'request-promise';
-import * as message from './message';
+import * as request from "request-promise";
+import * as message from "./message";
+import { UriOptions } from "request";
 
 /**
  * LUIS操作クラス
  */
-export class Luis{
-  private endpointUrl: string;
-  private accessKey: string;
+export class Luis {
+  private endpoint_url: string;
+  private access_key: string;
 
   constructor() {
-    this.endpointUrl = process.env.LUIS_ENDPOINT_URL;
-    this.accessKey = process.env.LUIS_ACCESS_KEY;
+    this.endpoint_url = process.env.LUIS_ENDPOINT_URL;
+    this.access_key = process.env.LUIS_ACCESS_KEY;
   }
-    /**
+  /**
    * 質問文をLUISに投げるためのJSON形式に変換
    * @param {string} question 質問文
    * @returns {any} JSON形式の文字列
@@ -24,32 +25,38 @@ export class Luis{
   /**
    * LUISを通じて、入力文章を解析する
    * @param {string} question 入力文章
-   * @returns {Primise<any>} JSON形式の要素一覧
+   * @returns {Array<any>} JSON形式の要素一覧
    */
   async detect(question: string):Promise<any> {
-    let url = this.endpointUrl;
-    let content = this.convertQuestion(question);
-    let options = {
-      'method': 'POST',
-      'uri': url,
-      'headers': {
-        'Content-Type': 'application/json',
-        'Ocp-Apim-Subscription-Key': this.accessKey
+    let url:string = this.endpoint_url;
+    let content:string = this.convertQuestion(question);
+    let options:UriOptions & request.Options = {
+      "method": "POST",
+      "uri": url,
+      "headers": {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": this.access_key
       },
-      'body': content,
-      'json': true
-    }
-    return await request(options)
+      "body": content,
+      "json": true
+    };
+    return request(options)
     .then((response) => {
       console.log(JSON.stringify(response));
-      return response.topScoringIntent.intent;
+      let intent_list = response.intents.filter(function(element: any) {
+        // 関連するインテントがあり、スコアが閾値を超えた結果のみを取得する
+        return (element.intent !== message.LUIS.INTENT_NONE && element.score < new Number(process.env.SCORE_THRESHOLD));
+      });
+      return intent_list;
     })
     .catch((err) => {
       switch (err.statusCode) {
         default:
-          console.log('error status code: ', err.statusCode);
+          console.log("error status code: ", err.statusCode);
       }
       return message.LUIS.NOTFOUND;
     });
+
   }
-};
+
+}

@@ -1,64 +1,83 @@
-// LINE用botのプロトタイプ
+// プロトタイプ(LINE用bot)
 
 // ================================
 // ライブラリインポート
 import * as dotenv from "dotenv";
 dotenv.config();
 import * as express from "express";
-let app = express();
-import * as line from '@line/bot-sdk';
+const app: express.Application = express();
+import * as line from "@line/bot-sdk";
 
-import * as MyMessage from './modules/message';
-import * as Keyword from './modules/keyword';
-import { QnAMaker } from './modules/qna-maker';
-let qnaMaker = new QnAMaker();
+import * as Keyword from "./modules/keyword";
+import * as MyMessage from "./modules/message";
+import { QnAMaker } from "./modules/qna-maker";
+const qnaMaker: QnAMaker = new QnAMaker();
 
 // ================================
-// LINE接続用パラメータ
-const line_config = {
+// lINE接続用パラメータ
+const line_config: line.MiddlewareConfig & line.ClientConfig = {
   channelAccessToken: process.env.LINE_ACCESS_TOKEN,
   channelSecret: process.env.LINE_CHANNEL_SECRET,
 };
 
-const bot = new line.Client(line_config);
+const bot: line.Client = new line.Client(line_config);
 
 // ================================
-// Webサーバ設定
+// webサーバ設定
 app.listen(process.env.PORT || 8080);
 
 // テスト接続時に使われるReplyToken
-const testReplyTokenList = ['00000000000000000000000000000000', 'ffffffffffffffffffffffffffffffff']
+const testReplyTokenList: string[] = ["00000000000000000000000000000000", "ffffffffffffffffffffffffffffffff"];
 // ================================
 // ルーティング設定
-app.post('/webhook', line.middleware(line_config), (req, res, next) => {
+app.post("/webhook", line.middleware(line_config), (req, res, next) => {
   // まずLINE側にステータスコード200 OKを返す
   res.sendStatus(200);
   console.log(req.body);
 
   // 全てのイベント処理のプロミスを格納する配列
-  let events_processed = [];
+  const events_processed: Promise<any>[] = processMessage(req.body.events);
 
+  // すべてのイベント処理が終了されたら、処理数を出力
+  Promise.all(events_processed)
+    .then((response) => {
+        console.log(`${response.length} event(s) processed.`);
+      }
+    )
+    .catch((err) => {
+      // 途中でエラーが発生した場合は内容を表示
+      console.log("error caused in resolve promise.");
+      console.log(err);
+    });
+});
+
+
+/**
+ * 届いたメッセージ（イベント）を、内容によって適切に処理する
+ * @param events 届いたメッセージ（イベント）リスト
+ * @returns {Array<Promise<any>>} メッセージの処理をスタックした配列
+ */
+function processMessage(events: any): Array<Promise<any>> {
+  const event_stack: Array<Promise<any>> = [];
   // イベントオブジェクトを順次処理
-  req.body.events.forEach((event) => {
-
+  events.forEach((event) => {
     // 管理画面のテスト接続時はトークンが固定。処理しない
-    if (testReplyTokenList.indexOf(event.replyToken) != 0) {
-
+    if (testReplyTokenList.indexOf(event.replyToken) !== 0) {
       // メッセージがテキストの時のみ
-      if (event.type == 'message' && event.message.type == 'text') {
+      if (event.type === "message" && event.message.type === "text") {
         switch (event.message.text) {
-          case 'メニュー':
-            events_processed.push(bot.replyMessage(event.replyToken, MyMessage.Template.QUICK_MESSAGE));
+          case "メニュー":
+            event_stack.push(bot.replyMessage(event.replyToken, MyMessage.Template.QUICK_MESSAGE));
             break;
           case Keyword.SELECT_EVENT_DATE:
-            events_processed.push(bot.replyMessage(event.replyToken, MyMessage.Template.DATEPICKER_MESSAGE));
+            event_stack.push(bot.replyMessage(event.replyToken, MyMessage.Template.DATEPICKER_MESSAGE));
             break;
           default:
-            events_processed.push(
-              qnaMaker.getAnswer(event.message.text, function (message) {
-                console.log('### callback function called ###');
+            event_stack.push(
+              qnaMaker.getAnswer(event.message.text, function (message: string): Promise<any> {
+                console.log("### callback function called ###");
                 return bot.replyMessage(event.replyToken, {
-                  type: 'text',
+                  type: "text",
                   text: message
                 });
               })
@@ -67,17 +86,5 @@ app.post('/webhook', line.middleware(line_config), (req, res, next) => {
       }
     }
   });
-
-  // すべてのイベント処理が終了されたら、処理数を出力
-  Promise.all(events_processed)
-    .then(
-      (response) => {
-        console.log(`${response.length} event(s) processed.`)
-      }
-    )
-    .catch((err) => {
-      // 途中でエラーが発生した場合は内容を表示
-      console.log(err);
-    });
-});
-
+  return event_stack;
+}
