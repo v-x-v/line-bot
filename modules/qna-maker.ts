@@ -1,3 +1,5 @@
+import * as dotenv from "dotenv";
+dotenv.config();
 import { UriOptions } from "request";
 import * as request from "request-promise";
 import { Luis } from "./luis";
