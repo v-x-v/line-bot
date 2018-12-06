@@ -117,9 +117,9 @@ export class QnAMaker {
    * @param intent LUISから得られたインテントの配列
    */
   private async getAnswerWithLuis(intent: any): Promise<any> {
-    console.log("2nd QnA called.");
     const content = this.convertRequestBody(intent.intent);
     this.options.body = content;
+    console.log("2nd QnA called.", "content: " + content);
     return request(this.options);
   }
 

@@ -43,7 +43,7 @@ export class Luis {
         // LUISの回答から、確度の高いインテント(文脈)とエンティティ(要素)のみを抜き出す
         console.log("luis-api returned.", JSON.stringify(response));
         let intentHash: any = response.topScoringIntent;
-        if (!this.intent_filter(intentHash.intent)) {
+        if (!this.intent_filter(intentHash)) {
           intentHash = {};
         }
         const entityList: any[] = response.entities.filter(this.entityFilter);
