@@ -46,9 +46,7 @@ export class Luis {
         if (!this.intent_filter(intentHash.intent)) {
           intentHash = {};
         }
-        const entityList: any[] = response.entities.filter(function(element: any) {
-          return element.score >= this.threshold;
-        });
+        const entityList: any[] = response.entities.filter(this.entityFilter);
         return {intent: intentHash, entities: entityList};
       })
       .catch((err) => {
@@ -73,5 +71,13 @@ export class Luis {
    */
   private intent_filter(element: any): boolean {
     return (element.intent !== message.LUIS.INTENT_NONE && element.score >= this.threshold);
+  }
+
+  /**
+   * スコアが閾値を超えた結果のみを取得するフィルタ関数
+   * @param element 判定するエンティティ要素
+   */
+  private entityFilter = (element: any, index?: number, array?: []): boolean => {
+    return (element.score >= this.threshold);
   }
 }
