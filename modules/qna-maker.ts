@@ -1,33 +1,32 @@
-import * as request from "request-promise";
-import * as message from "./message";
 import { UriOptions } from "request";
+import * as request from "request-promise";
 import { Luis } from "./luis";
-import { promises } from "fs";
+import * as message from "./message";
 
 /**
  * QnA Maker操作クラス
  */
 export class QnAMaker {
-  private endpoint_url: string;
-  private access_key: string;
+  private endpointUrl: string;
+  private accessKey: string;
   private luis: Luis;
+  private threshold: number;
+  private options: UriOptions & request.RequestPromiseOptions;
 
   constructor() {
-    this.endpoint_url = process.env.QNA_ENDPOINT_URL;
-    this.access_key = process.env.QNA_ACCESS_KEY;
+    this.endpointUrl = process.env.QNA_ENDPOINT_URL;
+    this.accessKey = process.env.QNA_ACCESS_KEY;
     this.luis = new Luis();
-  }
-  /**
-   * 質問文をQnA Makerに投げるためのJSON形式に変換
-   * @param {string} question 質問文
-   * @returns {any} JSON形式の文字列
-   */
-  private convertQuestion(question: string): any {
-    let content: any = {
-      "question": question
+    this.threshold = Number(process.env.QNA_SCORE_THRESHOLD) || 0;
+    this.options = {
+      headers: {
+        "Authorization": "EndpointKey " + this.accessKey,
+        "Content-Type": "application/json",
+      },
+      json: true,
+      method: "POST",
+      uri: this.endpointUrl,
     };
-
-    return content;
   }
 
   /**
@@ -36,53 +35,49 @@ export class QnAMaker {
    * @param {function} コールバック関数
    * @returns {Promise<any>} 質問に対応した、登録済みの回答
    */
-  async getAnswer(question: string, callback?: (body: any) => void): Promise<any> {
+  public async getAnswer(question: string, callback?: (body: any) => void): Promise<any> {
     // 質問内容をJSONに変換
-    let content: any = this.convertQuestion(question);
+    const content: any = this.convertRequestBody(question);
     // request設定
-    let options: UriOptions & request.RequestPromiseOptions = {
-      "method": "POST",
-      "uri": this.endpoint_url,
-      "headers": {
-        "Content-Type": "application/json",
-        "Authorization": "EndpointKey " + this.access_key,
-      },
-      "body": content,
-      "json": true
-    };
+    this.options.body = content;
     // 回答をQnAMakerからJSON形式で得る
+    // tslint:disable-next-line:max-line-length
     // 参考： https://westus.dev.cognitive.microsoft.com/docs/services/58994a073d9e04097c7ba6fe/operations/58994a073d9e041ad42d9ba9
-    return request(options)
+    return request(this.options)
       .then((response) => {
         // 回答が見つかって、スコアが90%を超えていたら返答する
-        let top_answer: any = response.answers[0];
-        console.log("get answer: ", JSON.stringify(top_answer));
-        if (top_answer.score >= 90) {
-          return callback(top_answer.answer);
+        const topAnswer: any = response.answers[0];
+        console.log("get answer: ", JSON.stringify(topAnswer));
+        if (topAnswer.score >= this.threshold) {
+          return callback(topAnswer.answer);
         } else {
           // 回答がない場合は、LUISをコール、インテントを取得して
           // 再度QnAに問い合わせ
           this.luis.detect(question)
-          .then((intents) => {
-            // インテントも取得できない場合は、 そのままコールバック
-            if(intents.length === 0) {
+          .then((result) => {
+            if (result.intent === {}) {
+              // インテント（文脈）が見つからなかった場合は、エンティティ（要素）から候補を表示
+              if (result.entities.length === 0) {
+                // エンティティも見つからなかった場合は、未実装回答を表示
+                return callback(message.QnA.NO_ANSWER);
+              }
+              // TODO: エンティティによって、メニューボタンでサジェストする
               return callback(message.QnA.NO_ANSWER);
             }
-            this.getAnswerWithLuis(intents)
-            .then((answer: string) => {
-              return callback(answer);
+            this.getAnswerWithLuis(result.intent)
+            .then((qnaResponse) => {
+              return callback(qnaResponse.answers[0].answer);
             })
             .catch((err) => {
               console.log("getAnsweWithLuis occured error. ", err);
+              return callback(message.LUIS.NOTFOUND);
             });
-
           });
         }
       }).catch((err) => {
         switch (err.statusCode) {
           case 404:
            return callback(message.QnA.NO_ANSWER);
-
           case 401:
             // 認証エラー
             console.log("QnA apiで認証エラーが発生しました。", err.response.message);
@@ -104,14 +99,26 @@ export class QnAMaker {
       });
   }
   /**
-   * LUISから得られた結果を用いて、QnA Makerから結果を得る
-   * @param intents LUISから得られたインテントの配列
+   * 質問文をQnA Makerに投げるためのJSON形式に変換
+   * @param {string} body 質問文
+   * @returns {any} JSON形式の文字列
    */
-  private async getAnswerWithLuis(intents: Array<any>): Promise<any> {
+  private convertRequestBody(body: string): any {
+    const content: any = {
+      question: body,
+    };
+
+    return content;
+  }
+  /**
+   * LUISから得られた結果を用いて、QnA Makerから結果を得る
+   * @param intent LUISから得られたインテントの配列
+   */
+  private async getAnswerWithLuis(intent: any): Promise<any> {
     console.log("2nd QnA called.");
-    intents.map((v, i) => {
-      console.log("intent" + i + ": " + JSON.stringify(v));
-    })
+    const content = this.convertRequestBody(intent.intent);
+    this.options.body = content;
+    return request(this.options);
   }
 
 }

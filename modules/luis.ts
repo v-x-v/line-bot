@@ -1,66 +1,81 @@
+import { UriOptions } from "request";
 import * as request from "request-promise";
 import * as message from "./message";
-import { UriOptions } from "request";
 
 /**
  * LUIS操作クラス
  */
 export class Luis {
-  private endpoint_url: string;
-  private access_key: string;
+  private endpointUrl: string;
+  private accessKey: string;
+  private threshold: number;
 
   constructor() {
-    this.endpoint_url = process.env.LUIS_ENDPOINT_URL;
-    this.access_key = process.env.LUIS_ACCESS_KEY;
-  }
-  /**
-   * 質問文をLUISに投げるためのJSON形式に変換
-   * @param {string} question 質問文
-   * @returns {any} JSON形式の文字列
-   */
-  private convertQuestion(question: string): any {
-    return question;
+    this.endpointUrl = process.env.LUIS_ENDPOINT_URL;
+    this.accessKey = process.env.LUIS_ACCESS_KEY;
+    this.threshold = Number(process.env.LUIS_SCORE_THRESHOLD) || 0;
   }
 
   /**
    * LUISを通じて、入力文章を解析する
    * @param {string} question 入力文章
-   * @returns {Array<any>} JSON形式の要素一覧
+   * @returns {any} {intent: Array<any>, entity: Array<any>}の配列
    */
-  async detect(question: string):Promise<any> {
-    let url:string = this.endpoint_url;
-    let content:string = this.convertQuestion(question);
-    let options:UriOptions & request.Options = {
-      "method": "POST",
-      "uri": url,
-      "headers": {
+  public async detect(question: string): Promise<any> {
+    const url: string = this.endpointUrl;
+    const content: string = this.convertRequestBody(question);
+    const options: UriOptions & request.Options = {
+      body: content,
+      headers: {
         "Content-Type": "application/json",
-        "Ocp-Apim-Subscription-Key": this.access_key,
-        "verbose": true,
-        "spellCheck": true,
-        "bing-spell-check-subscription-key": "3fdbf40d60ba44759b8b532c877ffe5c"
+        "Ocp-Apim-Subscription-Key": this.accessKey,
+        "bing-spell-check-subscription-key": "3fdbf40d60ba44759b8b532c877ffe5c",
       },
-      "body": content,
-      "json": true
+      json: true,
+      method: "POST",
+      uri: url,
     };
     console.log("luis-detect called. content: " + content);
     return request(options)
-    .then((response) => {
-      console.log("luis-api returned.", JSON.stringify(response));
-      let intent_list = response.intents.filter(function(element: any) {
-        // 関連するインテントがあり、スコアが閾値を超えた結果のみを取得する
-        return (element.intent !== message.LUIS.INTENT_NONE && element.score < new Number(process.env.SCORE_THRESHOLD));
+      .then((response) => {
+        // LUISの回答から、確度の高いインテント(文脈)とエンティティ(要素)のみを抜き出す
+        console.log("luis-api returned.", JSON.stringify(response));
+        let intentHash: any = response.topScoringIntent;
+        if (!this.intent_filter(intentHash.intent)) {
+          intentHash = {};
+        }
+        const entityList: any[] = response.entities.filter(this.entity_filter);
+        return {intent: intentHash, entities: entityList};
+      })
+      .catch((err) => {
+        switch (err.statusCode) {
+          default:
+            console.log("luis-detect occured error: ", err.statusCode, err);
+        }
+        throw err;
       });
-      return intent_list;
-    })
-    .catch((err) => {
-      switch (err.statusCode) {
-        default:
-          console.log("luis-detect occured error: ", err.statusCode, err);
-      }
-      return message.LUIS.NOTFOUND;
-    });
-
+  }
+  /**
+   * 質問文をLUISに投げるためのJSON形式に変換
+   * @param {string} body 質問文
+   * @returns {any} JSON形式の文字列
+   */
+  private convertRequestBody(body: string): any {
+    return body;
+  }
+  /**
+   * 関連するインテントがあり、スコアが閾値を超えた結果のみを取得するフィルタ関数
+   * @param element 判定するインテント要素
+   */
+  private intent_filter(element: any): boolean {
+    return (element.intent !== message.LUIS.INTENT_NONE && element.score >= this.threshold);
   }
 
+  /**
+   * スコアが閾値を超えた結果のみを取得するフィルタ関数
+   * @param element 判定するエンティティ要素
+   */
+  private entity_filter(element: any): boolean {
+    return (element.score >= this.threshold);
+  }
 }

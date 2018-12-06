@@ -1,7 +1,8 @@
+// tslint:disable:no-namespace
 // 応答メッセージのオブジェクト定義ファイル
-import * as Moment from "moment";
 // .envファイルから環境変数を読み込む
 import * as dotenv from "dotenv";
+import * as Moment from "moment";
 dotenv.config();
 
 // ======= QnA Makerのエラーメッセージ =======//
@@ -28,45 +29,45 @@ export namespace LUIS {
 
 export namespace Template {
   // クイックメッセージ
-  export var QUICK_MESSAGE: any = {
-    type: "text",
-    text: "好きなアクションを選んでね！",
+  export let QUICK_MESSAGE: any = {
     quickReply: {
       items: [
         {
-          type: "action",
           action: {
+            label: "位置情報",
             type: "location",
-            label: "位置情報"
-          }
+          },
+          type: "action",
         },
         {
-          type: "action",
           action: {
+            label: "カメラ起動",
             type: "camera",
-            label: "カメラ起動"
-          }
+          },
+          type: "action",
         },
         {
-          type: "action",
           action: {
+            label: "ギャラリー",
             type: "cameraRoll",
-            label: "ギャラリー"
-          }
-        }
-      ]
-    }
+          },
+          type: "action",
+        },
+      ],
+    },
+    text: "好きなアクションを選んでね！",
+    type: "text",
   };
 
   // 日時選択メッセージ
-  export var DATEPICKER_MESSAGE: any = {
-    "type": "datetimepicker",
-    "label": "Select date",
-    "data": "storeId=12345",
-    "mode": "date",
-    "initial": Moment().format("YYYY-MM-DD"),
-    "max": "2100-12-31",
-    "min": "2017-01-01"
+  export let DATEPICKER_MESSAGE: any = {
+    data: "storeId=12345",
+    initial: Moment().format("YYYY-MM-DD"),
+    label: "Select date",
+    max: "2100-12-31",
+    min: "2017-01-01",
+    mode: "date",
+    type: "datetimepicker",
   };
 
 }
